@@ -207,7 +207,7 @@
       const text = ""; // Texte par défaut
       const fontStyle = "Pacifico"; // Pacifico forcé comme police par défaut
       const fontSize = 80;
-      const color = '#00ffff'; // Bleu néon, modifiable selon tes besoins
+      const neonColor = '#00ffff'; // Couleur du contour néon (bleu clair), modifiable
 
       // Effacer le canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -217,12 +217,20 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // Effet néon
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = color;
-      ctx.fillStyle = color;
+      // Effet néon : blanc éclatant à l’intérieur avec un contour néon
+      ctx.lineWidth = 4; // Épaisseur du contour néon
+      ctx.strokeStyle = neonColor; // Contour bleu clair néon
+      ctx.fillStyle = '#ffffff'; // Intérieur blanc éclatant
+      ctx.shadowBlur = 5; // Légère ombre pour un effet discret
+      ctx.shadowColor = neonColor;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
 
-      // Dessiner le texte
+      // Dessiner le contour néon
+      ctx.beginPath();
+      ctx.strokeText(text, canvas.width / 2, canvas.height / 2);
+
+      // Dessiner l’intérieur blanc
       ctx.fillText(text, canvas.width / 2, canvas.height / 2);
     }
 
@@ -230,7 +238,7 @@
       const text = document.getElementById('neonText').value;
       const fontStyle = canvas.dataset.font || "Pacifico"; // Utilise la police sélectionnée ou Pacifico par défaut
       const fontSize = 80;
-      const color = '#00ffff'; // Bleu néon, modifiable selon tes besoins
+      const neonColor = '#00ffff'; // Couleur du contour néon (bleu clair), modifiable
 
       // Effacer le canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -240,12 +248,20 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // Effet néon
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = color;
-      ctx.fillStyle = color;
+      // Effet néon : blanc éclatant à l’intérieur avec un contour néon
+      ctx.lineWidth = 4; // Épaisseur du contour néon
+      ctx.strokeStyle = neonColor; // Contour bleu clair néon
+      ctx.fillStyle = '#ffffff'; // Intérieur blanc éclatant
+      ctx.shadowBlur = 5; // Légère ombre pour un effet discret
+      ctx.shadowColor = neonColor;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
 
-      // Dessiner le texte
+      // Dessiner le contour néon
+      ctx.beginPath();
+      ctx.strokeText(text, canvas.width / 2, canvas.height / 2);
+
+      // Dessiner l’intérieur blanc
       ctx.fillText(text, canvas.width / 2, canvas.height / 2);
     }
 
