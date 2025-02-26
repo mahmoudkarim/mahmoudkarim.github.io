@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      max-width: 1200px;
+      width: 100%;
+      height: 100%;
+    }
+    .left-column {
+      flex: 2;
+      height: 100vh;
+      background-image: url('background.png'); /* Remplace par ton image background.png */
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .right-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      height: 100%;
+    }
+    .title-box {
+      background-color: #e6f3ff;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      color: #2c3e50;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .step-title {
+      background-color: #4CAF50; /* Vert doux, modifiable */
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .active-font {
+      padding: 10px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      font-size: 16px;
+      color: #2c3e50;
+      text-align: center;
+      font-family: inherit; /* Utilise la police active */
+    }
+    .input-box {
+      padding: 15px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    canvas {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    /* Style pour le collapsable */
+    .font-section {
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+      flex-grow: 1;
+    }
+    .font-toggle {
+      background-color: #e6f3ff;
+      padding: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      color: #2c3e50;
+      border-bottom: 1px solid #ddd;
+    }
+    .font-toggle:hover {
+      background-color: #d9e8f6;
+    }
+    .font-content {
+      display: none;
+      padding: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .font-content.active {
+      display: flex;
+    }
+    .font-square {
+      width: 100px;
+      height: 100px;
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px; /* Réduit pour que le nom complet tienne */
+      overflow: hidden;
+      text-align: center;
+      transition: transform 0.2s;
+      white-space: nowrap; /* Empêche le retour à la ligne */
+      text-overflow: ellipsis; /* Ajoute "..." si le texte déborde */
+    }
+    .font-square:hover {
+      transform: scale(1.05);
+      background-color: #e0e0e0;
+    }
+    .font-square span {
+      font-family: inherit; /* Utilise la police définie dans data-font */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left-column">
+      <canvas id="neonCanvas" width="600" height="300"></canvas>
+    </div>
+    <div class="right-column">
+      <div class="title-box">Text for Your Neon</div>
+      <div class="step-title">1. Enter Your Text</div>
+      <div class="input-box">
+        <input type="text" id="neonText" placeholder="Tape ton texte ici" oninput="drawNeon()">
+      </div>
+      <div class="step-title">2. Choose Your Font</div>
+      <div class="active-font" id="activeFont">Pacifico</div>
+      <div class="font-section">
+        <div class="font-toggle">Select a Font</div>
+        <div class="font-content" id="fontContent">
+          <!-- Les carrés seront générés dynamiquement ici -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Charger les polices Google Fonts
+    const link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Amatic+SC&family=Bangers&family=Barriecito&family=Bungee&family=Bungee+Inline&family=Bungee+Outline&family=Cinzel&family=Dancing+Script&family=Fira+Sans&family=Great+Vibes&family=Indie+Flower&family=Kaushan+Script&family=Lobster+Two&family=Merriweather&family=Orbitron&family=Pacifico&family=Playfair+Display&family=Rock+Salt&family=Sacramento&family=Satisfy&family=Shadows+Into+Light&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+
+    const canvas = document.getElementById('neonCanvas');
+    const ctx = canvas.getContext('2d');
+    const fontContent = document.getElementById('fontContent');
+    const activeFontElement = document.getElementById('activeFont');
+
+    // Liste des polices (sans Arial)
+    const fonts = [
+      "Pacifico", "Dancing Script", "Lobster", "Kaushan Script", "Sacramento",
+      "Rock Salt", "Satisfy", "Indie Flower", "Great Vibes", "Cinzel",
+      "Fira Sans", "Bungee", "Amatic SC", "Bangers", "Barriecito",
+      "Lobster Two", "Shadows Into Light", "Merriweather", "Playfair Display",
+      "Orbitron", "Courier New"
+    ];
+
+    // Générer les carrés de police dynamiquement une fois les polices chargées
+    link.onload = function() {
+      fonts.forEach(font => {
+        const square = document.createElement('div');
+        square.className = 'font-square';
+        square.dataset.font = font;
+        square.innerHTML = `<span>${font}</span>`;
+        square.style.fontFamily = font + ', Arial'; // Appliquer la police avec fallback
+        square.onclick = () => selectFont(font);
+        fontContent.appendChild(square);
+      });
+      drawNeonWithDefault();
+      updateActiveFont("Pacifico"); // Définir Pacifico comme police active initiale
+    };
+
+    // Gérer le clic sur le toggle
+    document.querySelector('.font-toggle').addEventListener('click', function() {
+      fontContent.classList.toggle('active');
+    });
+
+    function drawNeonWithDefault() {
+      const text = ""; // Texte par défaut
+      const fontStyle = "Pacifico"; // Pacifico forcé comme police par défaut
+      const fontSize = 80;
+      const color = '#00ffff'; // Bleu néon, modifiable selon tes besoins
+
+      // Effacer le canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Configurer le style du texte avec la police choisie
+      ctx.font = `${fontSize}px ${fontStyle}, Arial`; // Fallback sur Arial si la police ne charge pas
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Effet néon
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = color;
+      ctx.fillStyle = color;
+
+      // Dessiner le texte
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+    }
+
+    function drawNeon() {
+      const text = document.getElementById('neonText').value;
+      const fontStyle = canvas.dataset.font || "Pacifico"; // Utilise la police sélectionnée ou Pacifico par défaut
+      const fontSize = 80;
+      const color = '#00ffff'; // Bleu néon, modifiable selon tes besoins
+
+      // Effacer le canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Configurer le style du texte avec la police choisie
+      ctx.font = `${fontSize}px ${fontStyle}, Arial`; // Fallback sur Arial si la police ne charge pas
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Effet néon
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = color;
+      ctx.fillStyle = color;
+
+      // Dessiner le texte
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+    }
+
+    function selectFont(font) {
+      canvas.dataset.font = font;
+      drawNeon();
+      updateActiveFont(font); // Mettre à jour l’affichage de la police active
+      fontContent.classList.remove('active'); // Ferme le collapsable après sélection
+    }
+
+    function updateActiveFont(font) {
+      activeFontElement.textContent = font;
+      activeFontElement.style.fontFamily = font + ', Arial'; // Appliquer la police active
+    }
+
+    // Dessiner au chargement initial avec Pacifico une fois les polices chargées
+    if (link.onload) {
+      // La fonction drawNeonWithDefault() sera appelée automatiquement après le chargement des polices
+    } else {
+      // Si pour une raison quelconque le chargement échoue, utiliser Pacifico immédiatement
+      drawNeonWithDefault();
+      updateActiveFont("Pacifico");
+    }
+  </script>
+</body>
+</html>
