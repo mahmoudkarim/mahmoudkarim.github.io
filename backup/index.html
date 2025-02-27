@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      max-width: 1200px;
+      width: 100%;
+      height: 100%;
+    }
+    .left-column {
+      flex: 2;
+      height: 100vh;
+      background-image: url('background.png'); /* Remplace par ton image background.png */
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .right-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px; /* Réduit l'espace entre les sections */
+      height: 100%;
+    }
+    .title-box {
+      background-color: #e6f3ff;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      color: #2c3e50;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .step-title {
+      background-color: #4CAF50; /* Vert doux, modifiable */
+      color: white;
+      padding: 8px 12px; /* Réduit le padding pour un titre plus compact */
+      border-radius: 5px;
+      margin-bottom: 5px; /* Réduit la marge */
+      font-size: 16px; /* Réduit la taille du texte */
+      font-weight: bold;
+    }
+    .active-font {
+      padding: 8px; /* Réduit le padding */
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      font-size: 14px; /* Réduit la taille du texte */
+      color: #2c3e50;
+      text-align: center;
+      font-family: inherit; /* Utilise la police active */
+    }
+    .input-box, .color-box {
+      padding: 10px; /* Réduit le padding pour une box plus compacte */
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+    }
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: 8px; /* Réduit le padding */
+      font-size: 14px; /* Réduit la taille du texte */
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      resize: vertical; /* Permet de redimensionner verticalement le textarea */
+      min-height: 80px; /* Hauteur minimale réduite pour le textarea */
+    }
+    canvas {
+      position: absolute;
+      top: 50%;
+      left: 30%;
+      transform: translate(-50%, -50%);
+    }
+    /* Style pour le collapsable */
+    .font-section {
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      overflow: hidden;
+      flex-grow: 1;
+    }
+    .font-toggle {
+      background-color: #e6f3ff;
+      padding: 8px; /* Réduit le padding */
+      cursor: pointer;
+      font-size: 14px; /* Réduit la taille du texte */
+      font-weight: bold;
+      color: #2c3e50;
+      border-bottom: 1px solid #ddd;
+    }
+    .font-toggle:hover {
+      background-color: #d9e8f6;
+    }
+    .font-content {
+      display: none;
+      padding: 8px; /* Réduit le padding */
+      flex-wrap: wrap;
+      gap: 8px; /* Réduit l'espace entre les carrés */
+    }
+    .font-content.active {
+      display: flex;
+    }
+    .font-square {
+      width: 90px; /* Réduit la taille des carrés */
+      height: 90px;
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px; /* Réduit la taille du texte */
+      overflow: hidden;
+      text-align: center;
+      transition: transform 0.2s;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .font-square:hover {
+      transform: scale(1.05);
+      background-color: #e0e0e0;
+    }
+    .font-square span {
+      font-family: inherit; /* Utilise la police définie dans data-font */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left-column">
+      <canvas id="neonCanvas" width="600" height="300"></canvas>
+    </div>
+    <div class="right-column">
+      <div class="title-box">Text for Your Neon</div>
+      <div class="step-title">1. Enter Your Text</div>
+      <div class="input-box">
+        <textarea id="neonText" placeholder="Tape ton texte ici" oninput="drawNeon()"></textarea>
+      </div>
+      <div class="step-title">2. Choose Your Font</div>
+      <div class="active-font" id="activeFont">Pacifico</div>
+      <div class="font-section">
+        <div class="font-toggle">Select a Font</div>
+        <div class="font-content" id="fontContent">
+          <!-- Les carrés seront générés dynamiquement ici -->
+        </div>
+      </div>
+      <div class="step-title">3. Choose Your Color</div>
+      <div class="color-box">
+        <select id="neonColor" onchange="drawNeon()">
+          <option value="#00ffff">Bleu Clair</option>
+          <option value="#ff00ff">Rose Néon</option>
+          <option value="#ff4500">Orange Néon</option>
+          <option value="#00ff00">Vert Néon</option>
+          <option value="#ff0000">Rouge Néon</option>
+          <option value="#ffff00">Jaune Néon</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Charger les polices Google Fonts
+    const link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Amatic+SC&family=Bangers&family=Barriecito&family=Bungee&family=Bungee+Inline&family=Bungee+Outline&family=Cinzel&family=Dancing+Script&family=Fira+Sans&family=Great+Vibes&family=Indie+Flower&family=Kaushan+Script&family=Lobster+Two&family=Merriweather&family=Orbitron&family=Pacifico&family=Playfair+Display&family=Rock+Salt&family=Sacramento&family=Satisfy&family=Shadows+Into+Light&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+
+    const canvas = document.getElementById('neonCanvas');
+    const ctx = canvas.getContext('2d');
+    const fontContent = document.getElementById('fontContent');
+    const activeFontElement = document.getElementById('activeFont');
+
+    // Liste des polices (sans Arial)
+    const fonts = [
+      "Pacifico", "Dancing Script", "Lobster", "Kaushan Script", "Sacramento",
+      "Rock Salt", "Satisfy", "Indie Flower", "Great Vibes", "Cinzel",
+      "Fira Sans", "Bungee", "Amatic SC", "Bangers", "Barriecito",
+      "Lobster Two", "Shadows Into Light", "Merriweather", "Playfair Display",
+      "Orbitron", "Courier New"
+    ];
+
+    // Générer les carrés de police dynamiquement une fois les polices chargées
+    link.onload = function() {
+      fonts.forEach(font => {
+        const square = document.createElement('div');
+        square.className = 'font-square';
+        square.dataset.font = font;
+        square.innerHTML = `<span>${font}</span>`;
+        square.style.fontFamily = font + ', Arial'; // Appliquer la police avec fallback
+        square.onclick = () => selectFont(font);
+        fontContent.appendChild(square);
+      });
+      drawNeonWithDefault();
+      updateActiveFont("Pacifico"); // Définir Pacifico comme police active initiale
+    };
+
+    // Gérer le clic sur le toggle
+    document.querySelector('.font-toggle').addEventListener('click', function() {
+      fontContent.classList.toggle('active');
+    });
+
+    function drawNeonWithDefault() {
+      const text = ""; // Texte par défaut
+      const fontStyle = "Pacifico"; // Pacifico forcé comme police par défaut
+      const neonColor = document.getElementById('neonColor').value || '#00ffff'; // Couleur du contour néon, bleu clair par défaut
+
+      // Effacer le canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Obtenir la largeur de la colonne left-column (approximation basée sur le Canvas)
+      const columnWidth = canvas.width; // Puisque le Canvas remplit left-column, on utilise sa largeur
+
+      // Gérer les retours à la ligne et ajuster la taille du texte
+      const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      let currentY = canvas.height / 2 - (lines.length - 1) * 40 / 2; // Centrer verticalement
+
+      lines.forEach(line => {
+        let fontSize = 80; // Taille initiale
+        let textWidth;
+
+        do {
+          ctx.font = `${fontSize}px ${fontStyle}, Arial`; // Fallback sur Arial si la police ne charge pas
+          textWidth = ctx.measureText(line).width;
+          const maxWidth = columnWidth * 0.5; // 50% de la largeur de la colonne
+          if (textWidth > maxWidth) { // Limite à 50% de la largeur de la colonne
+            fontSize -= 5; // Réduire la taille si le texte déborde
+          }
+        } while (textWidth > columnWidth * 0.5 && fontSize > 20); // Limite minimale de 20px
+
+        // Calculer la position centrée entre 25% et 75% de la largeur de la colonne
+        const startX = columnWidth * 0.25; // Début à 25% de la largeur de la colonne
+        const centerX = startX + (columnWidth * 0.5) / 2; // Centre entre 25% et 75%
+
+        // Configurer l’effet néon : blanc éclatant à l’intérieur avec un contour néon
+        ctx.lineWidth = 4; // Épaisseur du contour néon
+        ctx.strokeStyle = neonColor; // Contour coloré néon
+        ctx.fillStyle = '#ffffff'; // Intérieur blanc éclatant
+        ctx.shadowBlur = 5; // Légère ombre pour un effet discret
+        ctx.shadowColor = neonColor;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
+        // Dessiner le contour néon
+        ctx.beginPath();
+        ctx.strokeText(line, centerX, currentY);
+
+        // Dessiner l’intérieur blanc
+        ctx.fillText(line, centerX, currentY);
+
+        currentY += 40; // Espacement vertical pour éviter le chevauchement
+      });
+    }
+
+    function drawNeon() {
+      const text = document.getElementById('neonText').value;
+      const fontStyle = canvas.dataset.font || "Pacifico"; // Utilise la police sélectionnée ou Pacifico par défaut
+      const neonColor = document.getElementById('neonColor').value || '#00ffff'; // Couleur du contour néon, basée sur le sélecteur
+
+      // Effacer le canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Obtenir la largeur de la colonne left-column (approximation basée sur le Canvas)
+      const columnWidth = canvas.width; // Puisque le Canvas remplit left-column, on utilise sa largeur
+
+      // Gérer les retours à la ligne et ajuster la taille du texte
+      const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      let currentY = canvas.height / 2 - (lines.length - 1) * 40 / 2; // Centrer verticalement
+
+      lines.forEach(line => {
+        let fontSize = 80; // Taille initiale
+        let textWidth;
+
+        do {
+          ctx.font = `${fontSize}px ${fontStyle}, Arial`; // Fallback sur Arial si la police ne charge pas
+          textWidth = ctx.measureText(line).width;
+          const maxWidth = columnWidth * 0.5; // 50% de la largeur de la colonne
+          if (textWidth > maxWidth) { // Limite à 50% de la largeur de la colonne
+            fontSize -= 5; // Réduire la taille si le texte déborde
+          }
+        } while (textWidth > columnWidth * 0.5 && fontSize > 20); // Limite minimale de 20px
+
+        // Calculer la position centrée entre 25% et 75% de la largeur de la colonne
+        const startX = columnWidth * 0.25; // Début à 25% de la largeur de la colonne
+        const centerX = startX + (columnWidth * 0.5) / 2; // Centre entre 25% et 75%
+
+        // Configurer l’effet néon : blanc éclatant à l’intérieur avec un contour néon
+        ctx.lineWidth = 4; // Épaisseur du contour néon
+        ctx.strokeStyle = neonColor; // Contour coloré néon
+        ctx.fillStyle = '#ffffff'; // Intérieur blanc éclatant
+        ctx.shadowBlur = 5; // Légère ombre pour un effet discret
+        ctx.shadowColor = neonColor;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
+        // Dessiner le contour néon
+        ctx.beginPath();
+        ctx.strokeText(line, centerX, currentY);
+
+        // Dessiner l’intérieur blanc
+        ctx.fillText(line, centerX, currentY);
+
+        currentY += 40; // Espacement vertical pour éviter le chevauchement
+      });
+    }
+
+    function selectFont(font) {
+      canvas.dataset.font = font;
+      drawNeon();
+      updateActiveFont(font); // Mettre à jour l’affichage de la police active
+      fontContent.classList.remove('active'); // Ferme le collapsable après sélection
+    }
+
+    function updateActiveFont(font) {
+      activeFontElement.textContent = font;
+      activeFontElement.style.fontFamily = font + ', Arial'; // Appliquer la police active
+    }
+
+    // Dessiner au chargement initial avec Pacifico une fois les polices chargées
+    if (link.onload) {
+      // La fonction drawNeonWithDefault() sera appelée automatiquement après le chargement des polices
+    } else {
+      // Si pour une raison quelconque le chargement échoue, utiliser Pacifico immédiatement
+      drawNeonWithDefault();
+      updateActiveFont("Pacifico");
+    }
+  </script>
+</body>
+</html>
