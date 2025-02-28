@@ -19,13 +19,13 @@ const fonts = [
 ];
 
 // Générer les carrés de police dynamiquement
-link.onload = function() {
+link.onload = () => {
   fonts.forEach(font => {
     const square = document.createElement('div');
     square.className = 'font-square';
     square.dataset.font = font;
     square.innerHTML = `<span>${font}</span>`;
-    square.style.fontFamily = font + ', Arial';
+    square.style.fontFamily = `${font}, Arial`;
     square.onclick = () => selectFont(font);
     fontContent.appendChild(square);
   });
@@ -34,15 +34,13 @@ link.onload = function() {
 };
 
 // Gérer le clic sur le toggle
-document.querySelector('.font-toggle').addEventListener('click', function() {
+document.querySelector('.font-toggle').addEventListener('click', () => {
   fontContent.classList.toggle('active');
 });
 
-function drawNeonWithDefault() {
-  drawNeon("");
-}
+const drawNeonWithDefault = () => drawNeon("");
 
-function drawNeon(text = null) {
+const drawNeon = (text = null) => {
   const neonText = text !== null ? text : document.getElementById('neonText').value;
   const fontStyle = canvas.dataset.font || "Pacifico";
   const neonColor = document.getElementById('neonColor').value || '#00ffff';
@@ -54,22 +52,18 @@ function drawNeon(text = null) {
   const maxHeight = canvasHeight * 0.8;
   const lines = neonText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
-  if (lines.length === 0) return; // Évite l'erreur si aucun texte
+  if (lines.length === 0) return;
 
   let lineConfigs = lines.map(line => {
     let fontSize = 80;
     let textWidth;
-    
     let innerIteration = 0;
     const innerIterationLimit = 20;
 
     do {
       ctx.font = `${fontSize}px ${fontStyle}, Arial`;
       textWidth = ctx.measureText(line).width;
-      const maxWidth = columnWidth * 0.5;
-      if (textWidth > maxWidth) {
-        fontSize -= 5;
-      }
+      if (textWidth > columnWidth * 0.5) fontSize -= 5;
       innerIteration++;
     } while (textWidth > columnWidth * 0.5 && fontSize > 20 && innerIteration < innerIterationLimit);
 
@@ -77,28 +71,24 @@ function drawNeon(text = null) {
   });
 
   let totalHeight = lineConfigs.reduce((sum, config) => sum + config.fontSize * 1.2, 0);
-  
+
   if (lineConfigs.length > 0) {
     let iterationCount = 0;
     const iterationLimit = 50;
 
     while ((totalHeight < minHeight || totalHeight > maxHeight) && lineConfigs[0].fontSize > 20 && iterationCount < iterationLimit) {
       const adjustment = totalHeight > maxHeight ? -5 : 5;
-      
+
       lineConfigs = lineConfigs.map(config => {
         let fontSize = config.fontSize + adjustment;
         let textWidth;
-        
         let innerIteration = 0;
         const innerIterationLimit = 20;
-        
+
         do {
           ctx.font = `${fontSize}px ${fontStyle}, Arial`;
           textWidth = ctx.measureText(config.text).width;
-          const maxWidth = columnWidth * 0.5;
-          if (textWidth > maxWidth) {
-            fontSize -= 5;
-          }
+          if (textWidth > columnWidth * 0.5) fontSize -= 5;
           innerIteration++;
         } while (textWidth > columnWidth * 0.5 && fontSize > 20 && innerIteration < innerIterationLimit);
 
@@ -119,40 +109,35 @@ function drawNeon(text = null) {
   lineConfigs.forEach(config => {
     const { text, fontSize } = config;
     ctx.font = `${fontSize}px ${fontStyle}, Arial`;
-    const startX = columnWidth * 0.25;
-    const centerX = startX + (columnWidth * 0.5) / 2;
+    const centerX = columnWidth * 0.25 + (columnWidth * 0.5) / 2;
 
     ctx.lineWidth = 4;
     ctx.strokeStyle = neonColor;
     ctx.fillStyle = '#ffffff';
     ctx.shadowBlur = 5;
     ctx.shadowColor = neonColor;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
 
-    ctx.beginPath();
     ctx.strokeText(text, centerX, currentY);
     ctx.fillText(text, centerX, currentY);
 
     currentY += fontSize * 1.2;
   });
-}
+};
 
-function selectFont(font) {
+const selectFont = (font) => {
   canvas.dataset.font = font;
   drawNeon();
   updateActiveFont(font);
   fontContent.classList.remove('active');
-}
+};
 
-function updateActiveFont(font) {
+const updateActiveFont = (font) => {
   activeFontElement.textContent = font;
-  activeFontElement.style.fontFamily = font + ', Arial';
-}
+  activeFontElement.style.fontFamily = `${font}, Arial`;
+};
 
 // Dessiner au chargement initial
-if (link.onload) {
-} else {
+if (!link.onload) {
   drawNeonWithDefault();
   updateActiveFont("Pacifico");
 }
