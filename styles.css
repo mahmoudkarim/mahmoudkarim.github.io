@@ -71,9 +71,9 @@ body {
     background-color: #fff;
     border-radius: 5px;
     box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    flex-grow: 1;
     display: flex;
     align-items: center;
+    height: fit-content;
   }
   
   input[type="text"], select, textarea {
@@ -83,6 +83,13 @@ body {
     border: 1px solid #ddd;
     border-radius: 5px;
     resize: vertical;
+  }
+  
+  select {
+    height: auto;
+  }
+  
+  textarea {
     min-height: 80px;
   }
   

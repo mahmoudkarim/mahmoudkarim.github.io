@@ -9,7 +9,7 @@ const ctx = canvas.getContext('2d');
 const fontContent = document.getElementById('fontContent');
 const activeFontElement = document.getElementById('activeFont');
 
-// Liste des polices (sans Arial)
+// Liste des polices
 const fonts = [
   "Pacifico", "Dancing Script", "Lobster", "Kaushan Script", "Sacramento",
   "Rock Salt", "Satisfy", "Indie Flower", "Great Vibes", "Cinzel",
@@ -18,7 +18,7 @@ const fonts = [
   "Orbitron", "Courier New"
 ];
 
-// Générer les carrés de police dynamiquement une fois les polices chargées
+// Générer les carrés de police dynamiquement
 link.onload = function() {
   fonts.forEach(font => {
     const square = document.createElement('div');
@@ -39,95 +39,30 @@ document.querySelector('.font-toggle').addEventListener('click', function() {
 });
 
 function drawNeonWithDefault() {
-  const text = "";
-  const fontStyle = "Pacifico";
-  const neonColor = document.getElementById('neonColor').value || '#00ffff';
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const columnWidth = canvas.width;
-  const canvasHeight = canvas.height;
-  const minHeight = canvasHeight * 0.4; // 40% de la hauteur
-  const maxHeight = canvasHeight * 0.8; // 80% de la hauteur
-  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-
-  // Calculer la taille de la police pour chaque ligne
-  let lineConfigs = lines.map(line => {
-    let fontSize = 80;
-    let textWidth;
-    do {
-      ctx.font = `${fontSize}px ${fontStyle}, Arial`;
-      textWidth = ctx.measureText(line).width;
-      const maxWidth = columnWidth * 0.5;
-      if (textWidth > maxWidth) {
-        fontSize -= 5;
-      }
-    } while (textWidth > columnWidth * 0.5 && fontSize > 20);
-    return { text: line, fontSize };
-  });
-
-  // Ajuster la taille de la police pour respecter la hauteur totale (40% à 80%)
-  let totalHeight = lineConfigs.reduce((sum, config) => sum + config.fontSize * 1.2, 0);
-  if (lines.length > 0) {
-    while ((totalHeight < minHeight || totalHeight > maxHeight) && lineConfigs[0].fontSize > 20) {
-      const adjustment = totalHeight > maxHeight ? -5 : 5; // Réduire si trop grand, augmenter si trop petit
-      lineConfigs = lineConfigs.map(config => {
-        let fontSize = config.fontSize + adjustment;
-        let textWidth;
-        do {
-          ctx.font = `${fontSize}px ${fontStyle}, Arial`;
-          textWidth = ctx.measureText(config.text).width;
-          const maxWidth = columnWidth * 0.5;
-          if (textWidth > maxWidth) {
-            fontSize -= 5;
-          }
-        } while (textWidth > columnWidth * 0.5 && fontSize > 20);
-        return { text: config.text, fontSize };
-      });
-      totalHeight = lineConfigs.reduce((sum, config) => sum + config.fontSize * 1.2, 0);
-    }
-  }
-
-  // Calculer la position verticale pour centrer le texte
-  let currentY = (canvasHeight - totalHeight) / 2 + (lineConfigs.length > 0 ? lineConfigs[0].fontSize : 0);
-
-  lineConfigs.forEach(config => {
-    const { text, fontSize } = config;
-    ctx.font = `${fontSize}px ${fontStyle}, Arial`;
-    const startX = columnWidth * 0.25;
-    const centerX = startX + (columnWidth * 0.5) / 2;
-
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = neonColor;
-    ctx.fillStyle = '#ffffff';
-    ctx.shadowBlur = 5;
-    ctx.shadowColor = neonColor;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-
-    ctx.beginPath();
-    ctx.strokeText(text, centerX, currentY);
-    ctx.fillText(text, centerX, currentY);
-
-    currentY += fontSize * 1.2;
-  });
+  drawNeon("");
 }
 
-function drawNeon() {
-  const text = document.getElementById('neonText').value;
+function drawNeon(text = null) {
+  const neonText = text !== null ? text : document.getElementById('neonText').value;
   const fontStyle = canvas.dataset.font || "Pacifico";
   const neonColor = document.getElementById('neonColor').value || '#00ffff';
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const columnWidth = canvas.width;
   const canvasHeight = canvas.height;
-  const minHeight = canvasHeight * 0.4; // 40% de la hauteur
-  const maxHeight = canvasHeight * 0.8; // 80% de la hauteur
-  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  const minHeight = canvasHeight * 0.4;
+  const maxHeight = canvasHeight * 0.8;
+  const lines = neonText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
-  // Calculer la taille de la police pour chaque ligne
+  if (lines.length === 0) return; // Évite l'erreur si aucun texte
+
   let lineConfigs = lines.map(line => {
     let fontSize = 80;
     let textWidth;
+    
+    let innerIteration = 0;
+    const innerIterationLimit = 20;
+
     do {
       ctx.font = `${fontSize}px ${fontStyle}, Arial`;
       textWidth = ctx.measureText(line).width;
@@ -135,18 +70,28 @@ function drawNeon() {
       if (textWidth > maxWidth) {
         fontSize -= 5;
       }
-    } while (textWidth > columnWidth * 0.5 && fontSize > 20);
+      innerIteration++;
+    } while (textWidth > columnWidth * 0.5 && fontSize > 20 && innerIteration < innerIterationLimit);
+
     return { text: line, fontSize };
   });
 
-  // Ajuster la taille de la police pour respecter la hauteur totale (40% à 80%)
   let totalHeight = lineConfigs.reduce((sum, config) => sum + config.fontSize * 1.2, 0);
-  if (lines.length > 0) {
-    while ((totalHeight < minHeight || totalHeight > maxHeight) && lineConfigs[0].fontSize > 20) {
-      const adjustment = totalHeight > maxHeight ? -5 : 5; // Réduire si trop grand, augmenter si trop petit
+  
+  if (lineConfigs.length > 0) {
+    let iterationCount = 0;
+    const iterationLimit = 50;
+
+    while ((totalHeight < minHeight || totalHeight > maxHeight) && lineConfigs[0].fontSize > 20 && iterationCount < iterationLimit) {
+      const adjustment = totalHeight > maxHeight ? -5 : 5;
+      
       lineConfigs = lineConfigs.map(config => {
         let fontSize = config.fontSize + adjustment;
         let textWidth;
+        
+        let innerIteration = 0;
+        const innerIterationLimit = 20;
+        
         do {
           ctx.font = `${fontSize}px ${fontStyle}, Arial`;
           textWidth = ctx.measureText(config.text).width;
@@ -154,14 +99,21 @@ function drawNeon() {
           if (textWidth > maxWidth) {
             fontSize -= 5;
           }
-        } while (textWidth > columnWidth * 0.5 && fontSize > 20);
+          innerIteration++;
+        } while (textWidth > columnWidth * 0.5 && fontSize > 20 && innerIteration < innerIterationLimit);
+
         return { text: config.text, fontSize };
       });
+
       totalHeight = lineConfigs.reduce((sum, config) => sum + config.fontSize * 1.2, 0);
+      iterationCount++;
+    }
+
+    if (iterationCount >= iterationLimit) {
+      console.warn("Ajustement de la taille de police interrompu pour éviter une boucle infinie.");
     }
   }
 
-  // Calculer la position verticale pour centrer le texte
   let currentY = (canvasHeight - totalHeight) / 2 + (lineConfigs.length > 0 ? lineConfigs[0].fontSize : 0);
 
   lineConfigs.forEach(config => {
@@ -198,9 +150,8 @@ function updateActiveFont(font) {
   activeFontElement.style.fontFamily = font + ', Arial';
 }
 
-// Dessiner au chargement initial avec Pacifico une fois les polices chargées
+// Dessiner au chargement initial
 if (link.onload) {
-  // La fonction drawNeonWithDefault() sera appelée automatiquement après le chargement des polices
 } else {
   drawNeonWithDefault();
   updateActiveFont("Pacifico");
