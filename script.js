@@ -8,6 +8,8 @@ const canvas = document.getElementById('neonCanvas');
 const ctx = canvas.getContext('2d');
 const fontContent = document.getElementById('fontContent');
 const activeFontElement = document.getElementById('activeFont');
+const neonText = document.getElementById('neonText');
+const neonColor = document.getElementById('neonColor');
 
 // Liste des polices
 const fonts = [
@@ -38,38 +40,58 @@ document.querySelector('.font-toggle').addEventListener('click', () => {
   fontContent.classList.toggle('active');
 });
 
-// Nouvelle fonction pour restreindre à 4 lignes
-function restrictLines(textarea) {
-  const lines = textarea.value.split('\n');
-  if (lines.length > 4) {
-    textarea.value = lines.slice(0, 4).join('\n');
+// Ajouter les écouteurs d'événements pour le textarea et le select
+document.addEventListener('DOMContentLoaded', () => {
+  neonText.addEventListener('input', () => {
+    restrictInput(neonText);
+    drawNeon();
+  });
+  neonColor.addEventListener('change', drawNeon);
+});
+
+// Fonction pour restreindre à 4 lignes et 20 caractères par ligne
+function restrictInput(textarea) {
+  const maxLines = 4;
+  const maxCharsPerLine = 20;
+  let lines = textarea.value.split('\n');
+
+  // Limiter chaque ligne à 20 caractères
+  lines = lines.map(line => line.substring(0, maxCharsPerLine));
+
+  // Limiter à 4 lignes maximum
+  if (lines.length > maxLines) {
+    lines = lines.slice(0, maxLines);
   }
+
+  // Mettre à jour la valeur du textarea
+  textarea.value = lines.join('\n');
 }
 
 const drawNeonWithDefault = () => drawNeon("");
 
 const drawNeon = (text = null) => {
-  const neonText = text !== null ? text : document.getElementById('neonText').value;
+  const neonTextValue = text !== null ? text : neonText.value;
   const fontStyle = canvas.dataset.font || "Pacifico";
-  const neonColor = document.getElementById('neonColor').value || '#00ffff';
+  const neonColorValue = neonColor.value || '#00ffff';
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const columnWidth = canvas.width;
   const canvasHeight = canvas.height;
-  const minHeight = canvasHeight * 0.4;
-  const maxHeight = canvasHeight * 0.8;
+  const minHeight = canvasHeight * 0.4; // 40% de la hauteur du canvas
+  const maxHeight = canvasHeight * 0.8; // 80% de la hauteur du canvas
   
   // Limiter à 4 lignes maximum
-  const lines = neonText.split('\n').map(line => line.trim()).filter(line => line.length > 0).slice(0, 4);
+  const lines = neonTextValue.split('\n').map(line => line.trim()).filter(line => line.length > 0).slice(0, 4);
 
   if (lines.length === 0) return;
 
   let lineConfigs = lines.map(line => {
-    let fontSize = 80;
+    let fontSize = 80; // Taille initiale
     let textWidth;
     let innerIteration = 0;
     const innerIterationLimit = 20;
 
+    // Ajuster la taille de la police pour la largeur
     do {
       ctx.font = `${fontSize}px ${fontStyle}, Arial`;
       textWidth = ctx.measureText(line).width;
@@ -80,13 +102,15 @@ const drawNeon = (text = null) => {
     return { text: line, fontSize };
   });
 
-  let totalHeight = lineConfigs.reduce((sum, config) => sum + config.fontSize * 1.2, 0);
+  // Calculer la hauteur totale avec un espacement accru (1.5 au lieu de 1.2)
+  let totalHeight = lineConfigs.reduce((sum, config) => sum + config.fontSize * 1.5, 0);
 
+  // Ajuster la taille de la police pour respecter minHeight et maxHeight
   if (lineConfigs.length > 0) {
     let iterationCount = 0;
     const iterationLimit = 50;
 
-    while ((totalHeight < minHeight || totalHeight > maxHeight) && lineConfigs[0].fontSize > 20 && iterationCount < iterationLimit) {
+    while ((totalHeight < minHeight || totalHeight > maxHeight) && lineConfigs[0].fontSize > 10 && iterationCount < iterationLimit) {
       const adjustment = totalHeight > maxHeight ? -5 : 5;
 
       lineConfigs = lineConfigs.map(config => {
@@ -100,12 +124,12 @@ const drawNeon = (text = null) => {
           textWidth = ctx.measureText(config.text).width;
           if (textWidth > columnWidth * 0.5) fontSize -= 5;
           innerIteration++;
-        } while (textWidth > columnWidth * 0.5 && fontSize > 20 && innerIteration < innerIterationLimit);
+        } while (textWidth > columnWidth * 0.5 && fontSize > 10 && innerIteration < innerIterationLimit);
 
         return { text: config.text, fontSize };
       });
 
-      totalHeight = lineConfigs.reduce((sum, config) => sum + config.fontSize * 1.2, 0);
+      totalHeight = lineConfigs.reduce((sum, config) => sum + config.fontSize * 1.5, 0);
       iterationCount++;
     }
 
@@ -114,23 +138,25 @@ const drawNeon = (text = null) => {
     }
   }
 
-  let currentY = (canvasHeight - totalHeight) / 2 + (lineConfigs.length > 0 ? lineConfigs[0].fontSize : 0);
+  // Calculer la position Y initiale pour centrer verticalement
+  let currentY = (canvasHeight - totalHeight) / 2 + (lineConfigs[0].fontSize * 0.75); // Ajustement pour la première ligne
 
+  // Dessiner chaque ligne avec un espacement accru
   lineConfigs.forEach(config => {
     const { text, fontSize } = config;
     ctx.font = `${fontSize}px ${fontStyle}, Arial`;
     const centerX = columnWidth * 0.25 + (columnWidth * 0.5) / 2;
 
     ctx.lineWidth = 4;
-    ctx.strokeStyle = neonColor;
+    ctx.strokeStyle = neonColorValue;
     ctx.fillStyle = '#ffffff';
     ctx.shadowBlur = 5;
-    ctx.shadowColor = neonColor;
+    ctx.shadowColor = neonColorValue;
 
     ctx.strokeText(text, centerX, currentY);
     ctx.fillText(text, centerX, currentY);
 
-    currentY += fontSize * 1.2;
+    currentY += fontSize * 1.5; // Espacement accru entre les lignes
   });
 };
 
