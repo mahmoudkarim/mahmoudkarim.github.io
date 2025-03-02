@@ -38,6 +38,14 @@ document.querySelector('.font-toggle').addEventListener('click', () => {
   fontContent.classList.toggle('active');
 });
 
+// Nouvelle fonction pour restreindre à 4 lignes
+function restrictLines(textarea) {
+  const lines = textarea.value.split('\n');
+  if (lines.length > 4) {
+    textarea.value = lines.slice(0, 4).join('\n');
+  }
+}
+
 const drawNeonWithDefault = () => drawNeon("");
 
 const drawNeon = (text = null) => {
@@ -50,7 +58,9 @@ const drawNeon = (text = null) => {
   const canvasHeight = canvas.height;
   const minHeight = canvasHeight * 0.4;
   const maxHeight = canvasHeight * 0.8;
-  const lines = neonText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  
+  // Limiter à 4 lignes maximum
+  const lines = neonText.split('\n').map(line => line.trim()).filter(line => line.length > 0).slice(0, 4);
 
   if (lines.length === 0) return;
 
