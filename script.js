@@ -77,75 +77,60 @@ const drawNeon = (text = null) => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const columnWidth = canvas.width;
   const canvasHeight = canvas.height;
-  const minHeight = canvasHeight * 0.4; // 40% de la hauteur du canvas
-  const maxHeight = canvasHeight * 0.8; // 80% de la hauteur du canvas
   
   // Limiter à 4 lignes maximum
   const lines = neonTextValue.split('\n').map(line => line.trim()).filter(line => line.length > 0).slice(0, 4);
 
   if (lines.length === 0) return;
 
+  // Définir les pourcentages pour chaque ligne (22% par ligne pour laisser des marges)
+  const lineHeightPercentage = 22; // 22% de la hauteur par ligne (88% total avec 4 lignes)
+  const lineHeight = canvasHeight * (lineHeightPercentage / 100); // Hauteur en pixels
+  const maxFontSizePercentage = 18; // 18% de la hauteur totale comme taille max
+  const maxFontSize = canvasHeight * (maxFontSizePercentage / 100);
+  const minFontSizePercentage = 8; // 3% comme taille minimale
+  const minFontSize = canvasHeight * (minFontSizePercentage / 100);
+
   let lineConfigs = lines.map(line => {
-    let fontSize = 80; // Taille initiale
+    // Calculer la taille de la police en fonction de la longueur du texte
+    const textLength = line.length;
+    let fontSize = maxFontSize;
+
+    // Réduire la taille proportionnellement à la longueur (20 caractères max)
+    if (textLength > 0) {
+      fontSize = Math.max(minFontSize, maxFontSize * (20 - textLength) / 20);
+    }
+
     let textWidth;
     let innerIteration = 0;
     const innerIterationLimit = 20;
 
-    // Ajuster la taille de la police pour la largeur
+    // Ajuster la taille pour la largeur du canvas
     do {
       ctx.font = `${fontSize}px ${fontStyle}, Arial`;
       textWidth = ctx.measureText(line).width;
       if (textWidth > columnWidth * 0.5) fontSize -= 5;
       innerIteration++;
-    } while (textWidth > columnWidth * 0.5 && fontSize > 20 && innerIteration < innerIterationLimit);
+    } while (textWidth > columnWidth * 0.5 && fontSize > minFontSize && innerIteration < innerIterationLimit);
+
+    // Limiter à maxFontSize
+    fontSize = Math.min(fontSize, maxFontSize);
 
     return { text: line, fontSize };
   });
 
-  // Calculer la hauteur totale avec un espacement accru (1.5 au lieu de 1.2)
-  let totalHeight = lineConfigs.reduce((sum, config) => sum + config.fontSize * 1.5, 0);
+  // Calculer la hauteur totale en pourcentage pour centrer
+  const totalHeightPercentage = lines.length * lineHeightPercentage; // Pourcentage total occupé
+  const totalHeight = canvasHeight * (totalHeightPercentage / 100);
+  const startY = (canvasHeight - totalHeight) / 2; // Centrer précisément le bloc de texte
 
-  // Ajuster la taille de la police pour respecter minHeight et maxHeight
-  if (lineConfigs.length > 0) {
-    let iterationCount = 0;
-    const iterationLimit = 50;
-
-    while ((totalHeight < minHeight || totalHeight > maxHeight) && lineConfigs[0].fontSize > 10 && iterationCount < iterationLimit) {
-      const adjustment = totalHeight > maxHeight ? -5 : 5;
-
-      lineConfigs = lineConfigs.map(config => {
-        let fontSize = config.fontSize + adjustment;
-        let textWidth;
-        let innerIteration = 0;
-        const innerIterationLimit = 20;
-
-        do {
-          ctx.font = `${fontSize}px ${fontStyle}, Arial`;
-          textWidth = ctx.measureText(config.text).width;
-          if (textWidth > columnWidth * 0.5) fontSize -= 5;
-          innerIteration++;
-        } while (textWidth > columnWidth * 0.5 && fontSize > 10 && innerIteration < innerIterationLimit);
-
-        return { text: config.text, fontSize };
-      });
-
-      totalHeight = lineConfigs.reduce((sum, config) => sum + config.fontSize * 1.5, 0);
-      iterationCount++;
-    }
-
-    if (iterationCount >= iterationLimit) {
-      console.warn("Ajustement de la taille de police interrompu pour éviter une boucle infinie.");
-    }
-  }
-
-  // Calculer la position Y initiale pour centrer verticalement
-  let currentY = (canvasHeight - totalHeight) / 2 + (lineConfigs[0].fontSize * 0.75); // Ajustement pour la première ligne
-
-  // Dessiner chaque ligne avec un espacement accru
-  lineConfigs.forEach(config => {
+  lineConfigs.forEach((config, index) => {
     const { text, fontSize } = config;
     ctx.font = `${fontSize}px ${fontStyle}, Arial`;
     const centerX = columnWidth * 0.25 + (columnWidth * 0.5) / 2;
+
+    // Position Y en pourcentage, centrée dans chaque section
+    const currentY = startY + index * lineHeight + lineHeight / 2; // Centre de chaque section
 
     ctx.lineWidth = 4;
     ctx.strokeStyle = neonColorValue;
@@ -155,8 +140,6 @@ const drawNeon = (text = null) => {
 
     ctx.strokeText(text, centerX, currentY);
     ctx.fillText(text, centerX, currentY);
-
-    currentY += fontSize * 1.5; // Espacement accru entre les lignes
   });
 };
 
