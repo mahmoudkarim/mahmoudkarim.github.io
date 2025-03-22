@@ -15,7 +15,7 @@ const neonColor = document.getElementById('neonColor');
 const fonts = [
   "Pacifico", "Dancing Script", "Lobster", "Kaushan Script", "Sacramento",
   "Rock Salt", "Satisfy", "Indie Flower", "Great Vibes", "Cinzel",
-  "Fira Sans", "Bungee", "Amatic SC", "Bangers", "Barriecito",
+  "Fira Sans", "Amatic SC", "Barriecito",
   "Lobster Two", "Shadows Into Light", "Merriweather", "Playfair Display",
   "Orbitron", "Courier New"
 ];
